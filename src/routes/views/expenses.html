@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core@next/dist/ionic/ionic.esm.js"></script>
+  <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core@next/dist/ionic/ionic.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core@next/css/ionic.bundle.css" />
+  <style>
+    :root {
+      --ion-safe-area-top: 20px;
+      --ion-safe-area-bottom: 22px;
+    }
+  </style>
+  <script type="module">
+    import { alertController } from 'https://cdn.jsdelivr.net/npm/@ionic/core@next/dist/ionic/index.esm.js';
+    window.alertController = alertController;
+  </script>
+</head>
+
+<body>
+  <ion-app>
+    <ion-menu content-id="main" side="start" id="nav-menu">
+    </ion-menu>
+
+    <div class="ion-page" id="main">
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+          </ion-buttons>
+          <ion-title>Expenses</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-grid>
+          <ion-row>
+            <ion-col size-md="6" offset-md="3">
+              <ion-card>
+                <ion-card-header>
+                  <ion-card-title>New Expense</ion-card-title>
+                </ion-card-header>
+                <ion-card-content>
+                  <ion-item>
+                    <ion-label position="floating">Expense Reason</ion-label>
+                    <ion-input type="text" id="input-reason"></ion-input>
+                  </ion-item>
+                  <ion-item>
+                    <ion-label position="floating">Expense Amount</ion-label>
+                    <ion-input type="number" id="input-amount"></ion-input>
+                  </ion-item>
+                  <div class="ion-margin-vertical ion-text-right">
+                    <ion-button fill="outline" color="danger" id="btn-cancel">
+                      <ion-icon slot="start" name="close"></ion-icon>Clear
+                    </ion-button>
+                    <ion-button color="primary" id="btn-confirm">
+                      <ion-icon slot="start" name="add"></ion-icon>
+                      Add Expense
+                    </ion-button>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size-md="6" offset-md="3">
+              <ion-card>
+                <ion-card-content>
+                  <ion-list id="expenses-list"></ion-list>
+                  <div class="ion-margin-vertical ion-text-right">
+                    <p margin>Total Expenses: <span id="total-expenses"></span></p>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-content>
+    </div>
+    <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+      <ion-fab-button color="primary">
+        <ion-icon name="add"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+  </ion-app>
+  <script>
+    const reasonInput = document.querySelector('#input-reason');
+    const amountInput = document.querySelector('#input-amount');
+    const cancelBtn = document.querySelector('#btn-cancel');
+    const confirmBtn = document.querySelector('#btn-confirm');
+    const expensesList = document.querySelector('#expenses-list');
+    const totalExpensesOutput = document.querySelector('#total-expenses');
+
+    let totalExpenses = 0;
+    var expen = '';
+
+    const api = new XMLHttpRequest();
+    api.open('GET', '/getexpenses', true);
+    api.send();
+
+    api.onreadystatechange = function () {
+      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+        if (this.responseText != '') {
+          let techs = JSON.parse(this.responseText);
+
+          if (techs.length > 0) {
+            for (var k in techs) {
+              totalExpenses += techs[k].amount;
+
+              expen = expen + '<ion-item><ion-label>' + techs[k].reason + '  $' +
+                techs[k].amount + '</ion-label></ion-item>';
+            }
+
+            totalExpensesOutput.textContent = totalExpenses.toFixed(2);
+
+            expensesList.innerHTML = expen;
+          }
+        }
+      }
+    }
+
+    const clear = () => {
+      reasonInput.value = '';
+      amountInput.value = '';
+    };
+
+    cancelBtn.addEventListener('click', clear);
+
+    confirmBtn.addEventListener('click', addExpense);
+
+    function addExpense() {
+      const enteredReason = reasonInput.value;
+      const enteredAmount = amountInput.value;
+
+      if (
+        enteredReason.trim().length <= 0 ||
+        enteredAmount <= 0 ||
+        enteredAmount.trim().length <= 0
+      ) {
+        const alert = document.createElement('ion-alert');
+        alert.header = 'Message';
+        alert.message = 'Please enter a valid value!';
+        alert.buttons = ['OK'];
+
+        document.body.appendChild(alert);
+        return alert.present();
+        return;
+      }
+
+      post('/addexpense', { reason: enteredReason, amount: enteredAmount });
+
+      clear();
+    };
+
+    function post(path, params, method = 'post') {
+
+      const form = document.createElement('form');
+      form.method = method;
+      form.action = path;
+
+      for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+          const hiddenField = document.createElement('input');
+          hiddenField.type = 'hidden';
+          hiddenField.name = key;
+          hiddenField.value = params[key];
+
+          form.appendChild(hiddenField);
+        }
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+    }
+  </script>
+  <script>
+    const menuObject = document.querySelector('#nav-menu');
+
+    menuArray = [{ 'name': 'Expenses', 'url': './expenses', 'icon': 'home-outline' },
+    { 'name': 'Events', 'url': './events', 'icon': 'calendar-outline' },
+    { 'name': 'Location', 'url': './location', 'icon': 'location-outline' },
+    { 'name': 'Friends', 'url': './friends', 'icon': 'people-outline' }];
+
+    menuHtml = `
+            <ion-header>
+                <ion-toolbar color="primary">
+                    <ion-title>Menu</ion-title>
+                </ion-toolbar>
+            </ion-header>
+            <ion-content>
+                <ion-list>
+                    ${menuArray.map(item => `
+                        <ion-item>
+                            <ion-icon color="primary" name="${item.icon}" slot="start"></ion-icon>
+                            <ion-router-link color="dark" href="${item.url}">${item.name}</ion-router-link>
+                        </ion-item>
+                    `).join('\n')}
+                </ion-list>    
+            </ion-content>`;
+
+    menuObject.innerHTML = menuHtml;
+  </script>
+</body>
+
+</html>

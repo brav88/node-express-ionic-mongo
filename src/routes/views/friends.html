@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nav</title>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core@next/dist/ionic/ionic.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core@next/dist/ionic/ionic.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core@next/css/ionic.bundle.css" />
+    <style>
+        :root {
+            --ion-safe-area-top: 20px;
+            --ion-safe-area-bottom: 22px;
+        }
+    </style>
+</head>
+
+<body>
+    <ion-app>
+        <ion-menu content-id="main" side="start" id="nav-menu">
+        </ion-menu>
+
+        <div class="ion-page" id="main">
+            <ion-header>
+                <ion-toolbar color="primary">
+                    <ion-buttons slot="start">
+                        <ion-menu-button></ion-menu-button>
+                    </ion-buttons>
+                    <ion-title>Marvel Characters</ion-title>
+                </ion-toolbar>
+            </ion-header>
+            <ion-content>
+                <ion-nav root="nav-home"></ion-nav>
+            </ion-content>
+        </div>
+    </ion-app>
+    <script>
+        const apiUrl = 'http://gateway.marvel.com';
+        const characters = '/v1/public/characters';
+        const apiKey = '601a803a67448272cf8ebbc1d2213924';
+        const privateKey = '481131a4340c254fe9f5a8648a9d688bbef5d785';
+        const hash = 'c4b9a28826168c55770ca99634cc4e99';
+
+        let url = apiUrl + characters + '?ts=1&apikey=' + apiKey + '&hash=' + hash;
+
+        const api = new XMLHttpRequest();
+        api.open('GET', url, true);
+        api.send();
+
+        var techs;
+        api.onreadystatechange = function () {
+            if (this.status == 200 && this.readyState == 4) {
+                let datos = JSON.parse(this.responseText);
+
+                techs = datos.data.results;
+
+                customElements.define('nav-home', class NavHome extends HTMLElement {
+                    connectedCallback() {
+                        this.innerHTML = `
+                <ion-header translucent>                 
+                </ion-header>
+                <ion-content fullscreen>
+                  <ion-list>
+                  ${techs.map(tech => `
+                      <ion-item button onclick="showDetail('${tech.name}')">
+                      <ion-avatar slot="start">
+                        <ion-img src=${tech.thumbnail.path + '.' + tech.thumbnail.extension}></ion-img>
+                      </ion-avatar>
+                        <ion-label>
+                          <h3>${tech.name}</h3>
+                        </ion-label>
+                      </ion-item>
+                  `).join('\n')}
+                  </ion-list>
+                </ion-content>
+              `;
+                    }
+                });
+
+                customElements.define('nav-detail', class NavDetail extends HTMLElement {
+                    connectedCallback() {
+                        this.innerHTML = `
+                <ion-header translucent>
+                  <ion-toolbar>
+                    <ion-buttons slot="start">
+                      <ion-back-button defaultHref="/"></ion-back-button>
+                    </ion-buttons>
+                    <ion-title>${this.tech.name}</ion-title>
+                  </ion-toolbar>
+                </ion-header>
+                <ion-content fullscreen class="ion-padding">
+                  <ion-icon size="large"></ion-icon>
+                  <p>${this.tech.description}</p>
+                </ion-content>
+              `;
+                    }
+                });
+            }
+        }
+
+        const nav = document.querySelector('ion-nav');
+
+        function showDetail(name) {
+            const tech = techs.find(tech => tech.name === name);
+            nav.push('nav-detail', { tech });
+        }
+
+    </script>
+    <script src='js/menu.js'>      
+    </script>
+</body>
+
+</html>

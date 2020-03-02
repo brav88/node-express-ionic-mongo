@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location</title>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core@next/dist/ionic/ionic.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core@next/dist/ionic/ionic.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core@next/css/ionic.bundle.css" />
+    <style>
+        :root {
+            --ion-safe-area-top: 20px;
+            --ion-safe-area-bottom: 22px;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <ion-app>
+        <ion-menu content-id="main" side="start" id="nav-menu">
+        </ion-menu>
+
+        <div class="ion-page" id="main">
+            <ion-header>
+                <ion-toolbar color="primary">
+                    <ion-buttons slot="start">
+                        <ion-menu-button></ion-menu-button>
+                    </ion-buttons>
+                    <ion-title>Location</ion-title>
+                </ion-toolbar>
+            </ion-header>
+            <ion-content>
+                <div id="map"></div>
+                <script>
+                    var map, infoWindow;
+
+                    function initMap() {
+                        map = new google.maps.Map(document.getElementById('map'), {
+                            center: { lat: -0, lng: 0 },
+                            zoom: 17
+                        });
+                        infoWindow = new google.maps.InfoWindow;
+
+                        // Try HTML5 geolocation.
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(function (position) {
+                                var pos = {
+                                    lat: position.coords.latitude,
+                                    lng: position.coords.longitude
+                                };
+
+                                infoWindow.setPosition(pos);
+                                infoWindow.setContent('<ion-avatar><img src="./images/bras.jpg"></ion-avatar>');
+                                infoWindow.open(map);
+                                map.setCenter(pos);
+                            }, function () {
+                                handleLocationError(true, infoWindow, map.getCenter());
+                            });
+                        } else {
+                            // Browser doesn't support Geolocation
+                            handleLocationError(false, infoWindow, map.getCenter());
+                        }
+                    }
+
+                    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+                        infoWindow.setPosition(pos);
+                        infoWindow.setContent(browserHasGeolocation ?
+                            'Error: The Geolocation service failed.' :
+                            'Error: Your browser doesn\'t support geolocation.');
+                        infoWindow.open(map);
+                    }
+                </script>
+                <script async defer
+                    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlJ8ZFh_NUJpVt-OedfNLIZTwSUttUo9M&callback=initMap">
+                    </script>
+            </ion-content>
+        </div>
+    </ion-app>
+    <script>
+        const menuObject = document.querySelector('#nav-menu');
+
+        menuArray = [{ 'name': 'Expenses', 'url': './expenses', 'icon': 'home-outline' },
+        { 'name': 'Events', 'url': './events', 'icon': 'calendar-outline' },
+        { 'name': 'Location', 'url': './location', 'icon': 'location-outline' },
+        { 'name': 'Friends', 'url': './friends', 'icon': 'people-outline' }];
+
+        menuHtml = `
+            <ion-header>
+                <ion-toolbar color="primary">
+                    <ion-title>Menu</ion-title>
+                </ion-toolbar>
+            </ion-header>
+            <ion-content>
+                <ion-list>
+                    ${menuArray.map(item => `
+                        <ion-item>
+                            <ion-icon color="primary" name="${item.icon}" slot="start"></ion-icon>
+                            <ion-router-link color="dark" href="${item.url}">${item.name}</ion-router-link>
+                        </ion-item>
+                    `).join('\n')}
+                </ion-list>    
+            </ion-content>`;
+
+        menuObject.innerHTML = menuHtml;
+    </script>
+</body>
+
+</html>
